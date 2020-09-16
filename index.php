@@ -47,12 +47,17 @@
         return $stmt->execute([":status"=>$status,":id"=>$toDoId]);
     }
 
-    //
-
     //print_r(addToDo($databaseConnection,$toDosTableName,["description"=>"Clean garage","completed"=>true]));
     //print_r(updateToDoStatus($databaseConnection,$toDosTableName,false,1));
-    print_r(getToDos($databaseConnection,$toDosTableName));
-    exit;
+    if(isset($_POST['description']) && isset($_POST["completed"])){
+        addToDo($databaseConnection,$toDosTableName,["description"=>$_POST["description"],"completed"=>$_POST["completed"]]);
+        
+    }
+    else if(isset($_POST['deleteToDo'])){
+        removeToDo($databaseConnection,$toDosTableName,$_POST['deleteToDo']);
+    }
+    $toDos = getToDos($databaseConnection,$toDosTableName);
+    
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -60,8 +65,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To_Do_List</title>
+    <style>
+        td{
+            padding:0.25em;
+            text-align:center;
+        }
+        .content-container{
+            width:80%;
+            margin:auto;
+            max-width:640px;
+        }
+        .center-content{
+            text-align:center;
+        }
+    </style>
 </head>
 <body>
-    
+    <form action="<?php echo $_SERVER['PHP_SELF']?>" method="post" class='content-container center-content'>
+    <input name='description' placeholder="description" id='to-do-description'/><button value ='addToDo' type='submit'>Add ToDo</button>
+    <input type='hidden' name='completed' value='0'>
+    </form>
+    <table class='content-container'>
+        <thead>
+            <tr>
+            <th>Description</th>
+            <th>Complete</th>
+            <th>Action</th></tr>
+        </thead>
+        <tbody>
+            <?php
+                $currentPage = $_SERVER['PHP_SELF'];
+                foreach($toDos as $todo){
+                    $buttonStr = "<button type='submit'>Delete</button>";
+                    $deleteInput = "<input type='hidden' name='deleteToDo' value='{$todo["id"]}'/>";
+                    $form = "<form method='post' action='{$currentPage}'>{$deleteInput}{$buttonStr}</form>";
+                    $checked = $todo['completed']?'checked':null;
+                    $checkBox = "<input type='checkbox' {$checked} onchange='toDoCheckedStateChange(this)'>";
+                    echo "<tr id='{$todo['id']}'><td>{$todo['description']}</td><td>{$checkBox}</td><td>{$form}</td></tr>";
+                }
+            ?>
+        </tbody>
+    </table>
+                
 </body>
 </html>
