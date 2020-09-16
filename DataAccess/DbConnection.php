@@ -37,7 +37,7 @@
             $query = "use {$databaseName};create table if not exists {$tableName}(
                     id int primary key auto_increment, 
                     description varchar(50),
-                    completed tinyint,
+                    completed tinyint(1),
                     datetimestamp datetime not null default current_timestamp
             );";
 
