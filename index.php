@@ -18,7 +18,6 @@
         $stmt = $dbConnection->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
     }
 
     //function to add a to do item
@@ -49,12 +48,18 @@
 
     //print_r(addToDo($databaseConnection,$toDosTableName,["description"=>"Clean garage","completed"=>true]));
     //print_r(updateToDoStatus($databaseConnection,$toDosTableName,false,1));
-    if(isset($_POST['description']) && isset($_POST["completed"])){
+    if(isset($_POST['addToDo']) ){
         addToDo($databaseConnection,$toDosTableName,["description"=>$_POST["description"],"completed"=>$_POST["completed"]]);
         
     }
     else if(isset($_POST['deleteToDo'])){
         removeToDo($databaseConnection,$toDosTableName,$_POST['deleteToDo']);
+    }
+    else if(isset($_POST['updateToDoStatus'])){
+        header("Content-Type: application/json");
+        $updated = updateToDoStatus($databaseConnection,$toDosTableName,$_POST['complete'],$_POST['updateToDoStatus']);
+        print_r(json_encode(['updated'=>$updated]));
+        exit;
     }
     $toDos = getToDos($databaseConnection,$toDosTableName);
     
@@ -79,10 +84,48 @@
             text-align:center;
         }
     </style>
+    <script>
+        let url = '<?php echo $_SERVER["PHP_SELF"]?>';
+        function closest(startNode,selector){
+
+                while
+                (startNode && 
+                (!startNode.classList.contains(selector) &&
+                 startNode.nodeName.toLowerCase()!==selector &&
+                 `#${startNode.getAttribute('id')}` !==selector
+                 )){
+                    startNode = startNode.parentNode;
+                }
+
+            return startNode;
+        }
+
+        function toDoCheckedStateChange(currentTarget){
+            let tr = closest(currentTarget,'tr');
+            let id = (tr.getAttribute('id'));
+            let complete = currentTarget.checked?1:0;
+            let formData = new FormData();
+            formData.append("updateToDoStatus",id.toString());
+            formData.append("complete",complete);
+            fetch(url,{
+                method:"POST",
+                body:formData
+            })
+            .then(res=>{
+               
+                return res.json();
+            })
+            .then(data=>{
+                if(data.updated){
+                    alert("Status updated");
+                }
+            });
+        }
+    </script>
 </head>
 <body>
     <form action="<?php echo $_SERVER['PHP_SELF']?>" method="post" class='content-container center-content'>
-    <input name='description' placeholder="description" id='to-do-description'/><button value ='addToDo' type='submit'>Add ToDo</button>
+    <input name='description' placeholder="description" id='to-do-description'/><input name='addToDo'value ='Add ToDo' type='submit'>
     <input type='hidden' name='completed' value='0'>
     </form>
     <table class='content-container'>
